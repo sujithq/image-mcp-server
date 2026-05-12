@@ -211,9 +211,9 @@ Generate images using Azure OpenAI DALL-E models.
 |-----------|------|----------|---------|-------------|
 | `prompt` | string | Yes | - | Description of the image to generate (1-4000 chars) |
 | `size` | string | No | `1024x1024` | Image dimensions: `1024x1024`, `1024x1792`, `1792x1024` |
-| `quality` | string | No | `standard` | Image quality: `standard` or `hd` |
+| `quality` | string | No | `standard` | Image quality: `standard`, `hd`, `low`, `medium`, or `high` |
 | `n` | number | No | `1` | Number of images to generate (1-10) |
-| `output_format` | string | No | `png` | Output format: `png`, `jpeg`, `webp` |
+| `output_format` | string | No | `png` | Output format: `png` or `jpeg` (`webp` is currently not supported at runtime) |
 | `output_compression` | string | No | `none` | Compression level: `none`, `low`, `medium`, `high` |
 | `background` | string | No | - | Background color or style |
 | `user` | string | No | - | User identifier for tracking |
