@@ -205,15 +205,7 @@ export class AzureImageService {
   }
 
   private normaliseQuality(quality?: string): string {
-    if (quality === 'hd') {
-      return 'high';
-    }
-
-    if (quality === 'standard') {
-      return 'medium';
-    }
-
-    return quality || 'high';
+    return quality || 'standard';
   }
 
   private normaliseOutputFormat(outputFormat?: string): string {
