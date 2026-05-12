@@ -49,9 +49,10 @@ export const ImageGenerationSchema = z.object({
     .describe('User identifier for tracking and rate limiting'),
 
   model: z
-    .enum(['gpt-image-2', 'gpt-image-1.5'])
+    .string()
+    .min(1, 'Model or deployment name cannot be empty')
     .optional()
-    .describe('Model to use (default: gpt-image-2)')
+    .describe('Model or Azure OpenAI deployment name to use (default: gpt-image-2)')
 });
 
 export type ImageGenerationInput = z.infer<typeof ImageGenerationSchema>;
