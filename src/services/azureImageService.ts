@@ -217,11 +217,15 @@ export class AzureImageService {
   }
 
   private normaliseOutputFormat(outputFormat?: string): string {
-    if (outputFormat === 'webp') {
+    if (!outputFormat) {
       return 'png';
     }
 
-    return outputFormat || 'png';
+    if (outputFormat === 'png' || outputFormat === 'jpeg') {
+      return outputFormat;
+    }
+
+    throw new Error(`Unsupported output format: ${outputFormat}`);
   }
 
   private normaliseOutputCompression(outputCompression?: string): number | undefined {
