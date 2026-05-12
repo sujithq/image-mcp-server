@@ -48,8 +48,8 @@ export class ImageGenerationTool {
         },
         quality: {
           type: 'string',
-          enum: ['standard', 'hd'],
-          description: 'Image quality (default: standard)'
+          enum: ['standard', 'hd', 'low', 'medium', 'high'],
+          description: 'Image quality (default: standard). Accepted values: standard, hd, low, medium, high'
         },
         n: {
           type: 'number',
