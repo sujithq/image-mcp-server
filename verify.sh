@@ -74,8 +74,10 @@ fi
 
 # Run tests
 echo -n "Running tests... "
-if npm test > /dev/null 2>&1; then
-  test_count=$(npm test 2>&1 | grep -o "[0-9]* passed" | head -1 | cut -d' ' -f1)
+test_output=$(npm test 2>&1)
+test_status=$?
+if [ "$test_status" -eq 0 ]; then
+  test_count=$(printf '%s\n' "$test_output" | grep -o "[0-9]* passed" | head -1 | cut -d' ' -f1)
   echo -e "${check_mark} All tests passed ($test_count tests)"
 else
   echo -e "${cross_mark} Tests failed"
