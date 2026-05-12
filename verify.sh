@@ -128,7 +128,7 @@ if [ $failures -eq 0 ]; then
   echo "Next steps:"
   echo "  1. Configure your .env file with Azure credentials"
   echo "  2. Run: npm start"
-  echo "  3. See QUICKSTART.md for Claude Desktop integration"
+  echo "  3. See QUICKSTART.md for VS Code integration"
   exit 0
 else
   echo -e "${RED}✗ $failures check(s) failed${NC}"

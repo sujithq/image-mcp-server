@@ -1,6 +1,6 @@
 # Azure Image MCP Server
 
-A Model Context Protocol (MCP) server for Azure OpenAI image generation. This server enables AI assistants like Claude to generate images using Azure OpenAI's DALL-E models through a standardized MCP interface.
+A Model Context Protocol (MCP) server for Azure OpenAI image generation. This server enables AI assistants and development tools like VS Code to generate images using Azure OpenAI's DALL-E models through a standardized MCP interface.
 
 ## Features
 
@@ -113,7 +113,7 @@ LOG_LEVEL=info
 
 ### Running the Server
 
-**Stdio mode (for local MCP clients like Claude Desktop):**
+**Stdio mode (for local MCP clients like VS Code):**
 ```bash
 npm start
 ```
@@ -123,9 +123,64 @@ npm start
 npm run dev
 ```
 
-### Claude Desktop Integration
+### VS Code Integration
 
-Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+The server integrates with VS Code through MCP-compatible extensions. There are several ways to use MCP servers with VS Code:
+
+#### Option 1: Using Cline Extension (Recommended)
+
+1. Install the [Cline extension](https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev) from VS Code marketplace
+2. Open VS Code settings (File > Preferences > Settings)
+3. Search for "Cline: MCP Settings"
+4. Add your MCP server configuration:
+
+```json
+{
+  "cline.mcpServers": {
+    "azure-image": {
+      "command": "node",
+      "args": ["/absolute/path/to/azure-image-mcp-server/dist/index.js"],
+      "env": {
+        "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
+        "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
+        "AZURE_TENANT_ID": "your-tenant-id",
+        "AZURE_CLIENT_ID": "your-client-id",
+        "AZURE_CLIENT_SECRET": "your-client-secret",
+        "IMAGE_OUTPUT_DIR": "/path/to/output/images"
+      }
+    }
+  }
+}
+```
+
+#### Option 2: Using Claude Code Extension
+
+1. Install the [Claude Code extension](https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code)
+2. Configure your MCP server in VS Code settings or in your workspace `.vscode/settings.json`:
+
+```json
+{
+  "claude-code.mcpServers": {
+    "azure-image": {
+      "command": "node",
+      "args": ["${workspaceFolder}/dist/index.js"],
+      "env": {
+        "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
+        "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
+        "AZURE_TENANT_ID": "${env:AZURE_TENANT_ID}",
+        "AZURE_CLIENT_ID": "${env:AZURE_CLIENT_ID}",
+        "AZURE_CLIENT_SECRET": "${env:AZURE_CLIENT_SECRET}",
+        "IMAGE_OUTPUT_DIR": "${workspaceFolder}/output/images"
+      }
+    }
+  }
+}
+```
+
+#### Option 3: Using Continue Extension
+
+1. Install the [Continue extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
+2. Add the MCP server to your Continue configuration file (`~/.continue/config.json`):
 
 ```json
 {
@@ -148,13 +203,13 @@ Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/
 
 ### Using the Image Generation Tool
 
-Once connected, you can ask Claude to generate images:
+Once connected through your VS Code MCP extension, you can generate images by asking:
 
 ```
 Generate an image of a serene mountain landscape at sunset with a lake in the foreground
 ```
 
-Claude will use the `generate_image` tool with appropriate parameters.
+The AI assistant will use the `generate_image` tool with appropriate parameters.
 
 ## Tool Reference
 

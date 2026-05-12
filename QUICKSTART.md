@@ -139,11 +139,79 @@ You should see log output like:
 {"timestamp":"2024-05-12T10:00:00.000Z","level":"info","message":"Azure Image MCP Server running on stdio"}
 ```
 
-## Step 4: Integrate with Claude Desktop
+## Step 4: Integrate with VS Code
 
-### macOS Configuration
+### Install an MCP-Compatible Extension
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Choose one of the following VS Code extensions that support MCP:
+
+1. **Cline** (Recommended for beginners)
+   - Install from: [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev)
+   - Best for: General AI assistance with MCP support
+
+2. **Claude Code** (Official Anthropic extension)
+   - Install from: [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Anthropic.claude-code)
+   - Best for: Professional development with Claude AI
+
+3. **Continue**
+   - Install from: [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
+   - Best for: Multi-model AI coding assistance
+
+### Configure the MCP Server
+
+#### For Cline Extension:
+
+1. Open VS Code Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
+2. Search for "Preferences: Open User Settings (JSON)"
+3. Add the following configuration:
+
+```json
+{
+  "cline.mcpServers": {
+    "azure-image": {
+      "command": "node",
+      "args": ["/absolute/path/to/azure-image-mcp-server/dist/index.js"],
+      "env": {
+        "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
+        "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
+        "AZURE_TENANT_ID": "your-tenant-id",
+        "AZURE_CLIENT_ID": "your-client-id",
+        "AZURE_CLIENT_SECRET": "your-client-secret",
+        "IMAGE_OUTPUT_DIR": "/absolute/path/to/generated-images"
+      }
+    }
+  }
+}
+```
+
+#### For Claude Code Extension:
+
+Create or edit `.vscode/settings.json` in your workspace:
+
+```json
+{
+  "claude-code.mcpServers": {
+    "azure-image": {
+      "command": "node",
+      "args": ["${workspaceFolder}/azure-image-mcp-server/dist/index.js"],
+      "env": {
+        "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
+        "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
+        "AZURE_TENANT_ID": "${env:AZURE_TENANT_ID}",
+        "AZURE_CLIENT_ID": "${env:AZURE_CLIENT_ID}",
+        "AZURE_CLIENT_SECRET": "${env:AZURE_CLIENT_SECRET}",
+        "IMAGE_OUTPUT_DIR": "${workspaceFolder}/generated-images"
+      }
+    }
+  }
+}
+```
+
+**Pro tip:** Use `${env:VARIABLE_NAME}` to reference environment variables instead of hardcoding secrets.
+
+#### For Continue Extension:
+
+Edit `~/.continue/config.json`:
 
 ```json
 {
@@ -157,52 +225,33 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
         "AZURE_TENANT_ID": "your-tenant-id",
         "AZURE_CLIENT_ID": "your-client-id",
         "AZURE_CLIENT_SECRET": "your-client-secret",
-        "IMAGE_OUTPUT_DIR": "/Users/yourname/generated-images"
+        "IMAGE_OUTPUT_DIR": "/absolute/path/to/generated-images"
       }
     }
   }
 }
 ```
 
-### Windows Configuration
+### Reload VS Code
 
-Edit `%APPDATA%\Claude\claude_desktop_config.json`:
+1. Close and reopen VS Code, or
+2. Use Command Palette: "Developer: Reload Window"
 
-```json
-{
-  "mcpServers": {
-    "azure-image": {
-      "command": "node",
-      "args": ["C:\\path\\to\\azure-image-mcp-server\\dist\\index.js"],
-      "env": {
-        "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
-        "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
-        "AZURE_TENANT_ID": "your-tenant-id",
-        "AZURE_CLIENT_ID": "your-client-id",
-        "AZURE_CLIENT_SECRET": "your-client-secret",
-        "IMAGE_OUTPUT_DIR": "C:\\Users\\YourName\\generated-images"
-      }
-    }
-  }
-}
-```
+### Verify Connection
 
-### Restart Claude Desktop
-
-1. Quit Claude Desktop completely
-2. Start Claude Desktop
-3. Look for the tools icon (🔧) in the chat interface
-4. The `generate_image` tool should be available
+1. Open the extension's panel (e.g., Cline icon in sidebar)
+2. Look for "MCP Tools" or "Available Tools" section
+3. You should see `generate_image` tool listed
 
 ## Step 5: Generate Your First Image
 
-In Claude Desktop, try:
+In your VS Code AI assistant, try:
 
 ```
 Generate an image of a futuristic city at night with flying cars and neon lights
 ```
 
-Claude will use the `generate_image` tool and return the path to the generated image.
+The AI will use the `generate_image` tool and return the path to the generated image.
 
 ## Troubleshooting
 
@@ -237,15 +286,22 @@ Claude will use the `generate_image` tool and return the path to the generated i
 2. Use absolute paths in configuration
 3. Check server logs for file system errors
 
-### Claude Desktop Not Detecting Server
+### VS Code Extension Not Detecting Server
 
 **Solution:**
-1. Ensure absolute paths are used in config
+1. Ensure absolute paths are used in config (or proper workspace variables)
 2. Verify `npm run build` completed successfully
-3. Check Claude Desktop logs:
-   - macOS: `~/Library/Logs/Claude/`
-   - Windows: `%APPDATA%\Claude\logs\`
-4. Restart Claude Desktop
+3. Check extension output logs:
+   - Open Output panel (`Ctrl+Shift+U` or `Cmd+Shift+U`)
+   - Select your extension from dropdown (e.g., "Cline", "Claude Code")
+4. Reload VS Code window
+5. Check MCP server is running with `LOG_LEVEL=debug` for detailed logs
+
+### Extension-Specific Issues
+
+**Cline:** Check settings under "Cline: MCP Settings" in VS Code settings
+**Claude Code:** Verify workspace `.vscode/settings.json` is correctly formatted
+**Continue:** Check `~/.continue/config.json` syntax is valid JSON
 
 ## Next Steps
 
@@ -253,10 +309,12 @@ Claude will use the `generate_image` tool and return the path to the generated i
 - Explore advanced configuration options
 - Check out the [test client](test-client.js) for API examples
 - Review logs in `IMAGE_OUTPUT_DIR` for debugging
+- Try generating images with different parameters (size, quality, style)
 
 ## Getting Help
 
 - Check logs with `LOG_LEVEL=debug` for more details
 - Review Azure OpenAI service health
 - Verify quota limits in Azure Portal
+- Check extension-specific documentation
 - Check GitHub Issues for known problems

@@ -25,6 +25,7 @@ yarn-error.log*
 
 # IDE
 .vscode/
+!.vscode/settings.json.example
 .idea/
 *.swp
 *.swo
