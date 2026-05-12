@@ -149,6 +149,16 @@ describe('ImageGenerationSchema', () => {
       expect(result.success).toBe(false);
     });
 
+    it('should reject non-string model', () => {
+      const input = {
+        prompt: 'Test',
+        model: 123
+      };
+
+      const result = ImageGenerationSchema.safeParse(input);
+      expect(result.success).toBe(false);
+    });
+
     it('should reject invalid output_format', () => {
       const input = {
         prompt: 'Test',
