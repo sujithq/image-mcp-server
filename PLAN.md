@@ -3,7 +3,7 @@ Build a new MCP server from scratch that exposes image-generation tools backed b
 
 **Steps**
 1. Phase 1 - Scaffold and configuration.
-2. Initialize a TypeScript Node.js MCP server project with strict TypeScript settings, linting, and environment-based configuration for endpoint, keyless Microsoft Entra ID authentication (managed identity/service principal), deployment/model name, and output directory.
+2. Initialize a TypeScript Node.js MCP server project with strict TypeScript settings, linting, and environment-based configuration for endpoint, keyless Microsoft Entra ID authentication with RBAC, deployment/model name, and output directory.
 3. Add a transport abstraction so startup can run stdio, SSE, or both based on config flags. Keep transport bootstrap isolated from tool logic.
 4. Phase 2 - Image tool implementation (depends on Phase 1).
 5. Implement a primary MCP tool for text-to-image generation with required prompt input and optional parameters: size, quality, n, output_format, output_compression, background, and user identifier.
@@ -41,7 +41,7 @@ Build a new MCP server from scratch that exposes image-generation tools backed b
 - Scope excluded (initial version): image edit/inpainting, streaming partial images, custom auth brokering beyond standard Entra ID credential flows, and production infra/deployment automation.
 
 **Further Considerations**
-1. Authentication mode recommendation: use Microsoft Entra ID keyless auth from the start (managed identity in Azure, service principal for local dev/CI).
+1. Authentication mode recommendation: use Microsoft Entra ID keyless auth from the start (Azure CLI identity locally, managed identity in Azure).
 2. Output storage recommendation: local filesystem first; optional blob storage adapter can be added as Phase 2 enhancement.
 3. Throughput recommendation: begin with single-request processing; add queue/concurrency controls after baseline behavior is verified.
 
@@ -50,24 +50,24 @@ Build a new MCP server from scratch that exposes image-generation tools backed b
 - Create or select an Azure OpenAI resource in a supported region.
 - Deploy gpt-image-2 (primary) and optionally gpt-image-1.5 (fallback) with known deployment names.
 2. Identity and access prerequisites:
-- For local dev/CI, create a service principal (app registration) in the same tenant as the Azure OpenAI resource.
+- For local dev, use Azure CLI authentication with `az login`.
 - For Azure-hosted runtime, enable a managed identity on the host (App Service, Container Apps, VM, or Functions).
-- Assign Cognitive Services OpenAI User role on the Azure OpenAI resource to the service principal and/or managed identity.
+- Assign Cognitive Services OpenAI User role on the Azure OpenAI resource to the signed-in user and/or managed identity.
 3. Local environment variables for keyless auth:
 - AZURE_OPENAI_ENDPOINT: Azure OpenAI endpoint URL.
 - AZURE_OPENAI_IMAGE_MODEL: primary deployment name (for example gpt-image-2 deployment alias).
 - AZURE_OPENAI_IMAGE_FALLBACK_MODEL: optional fallback deployment name.
-- AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET: required for local service principal auth.
+- AZURE_CLIENT_ID: optional user-assigned managed identity client ID.
 - IMAGE_OUTPUT_DIR and MCP transport mode variables (stdio, sse, or both).
 4. Token flow implementation requirements:
 - Use DefaultAzureCredential with scope https://ai.azure.com/.default.
 - Fail fast with clear diagnostics if credential chain fails.
-- Log which credential source succeeded (service principal vs managed identity) without exposing secrets.
+- Log which credential source succeeded without exposing credentials.
 5. Auth verification sequence:
 - Run a startup health check that acquires a token before registering MCP tools.
 - Execute one low-cost test generation prompt and confirm successful image file write.
 - Validate unauthorized path by temporarily removing role assignment and confirming explicit 401/403 handling.
 6. Production hardening requirements:
 - Prefer managed identity in production; avoid storing client secrets in production runtime.
-- Rotate service principal secrets used in dev/CI and store them in secure secret stores.
+- Avoid long-lived credentials in dev/CI; prefer federated identity or managed identity where available.
 - Add alerting for repeated auth failures and token acquisition errors.
