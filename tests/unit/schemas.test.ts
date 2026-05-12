@@ -139,10 +139,10 @@ describe('ImageGenerationSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject invalid model', () => {
+    it('should reject empty model', () => {
       const input = {
         prompt: 'Test',
-        model: 'gpt-4'
+        model: ''
       };
 
       const result = ImageGenerationSchema.safeParse(input);

@@ -52,7 +52,7 @@ export class ImageGenerationTool {
           description: 'Image quality (default: standard). Accepted values: standard, hd, low, medium, high'
         },
         n: {
-          type: 'number',
+          type: 'integer',
           description: 'Number of images to generate (default: 1, max: 10)',
           minimum: 1,
           maximum: 10

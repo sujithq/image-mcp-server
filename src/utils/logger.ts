@@ -45,7 +45,20 @@ export class Logger {
   }
 }
 
+function resolveLogLevel(level?: string): 'debug' | 'info' | 'warn' | 'error' {
+  if (!level) {
+    return 'info';
+  }
+
+  if (level === 'debug' || level === 'info' || level === 'warn' || level === 'error') {
+    return level;
+  }
+
+  console.error(`Invalid LOG_LEVEL "${level}". Falling back to "info". Allowed values: debug, info, warn, error.`);
+  return 'info';
+}
+
 // Global logger instance
 export const logger = new Logger(
-  (process.env.LOG_LEVEL as 'debug' | 'info' | 'warn' | 'error') || 'info'
+  resolveLogLevel(process.env.LOG_LEVEL)
 );
