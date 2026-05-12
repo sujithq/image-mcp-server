@@ -29,10 +29,7 @@ export function loadConfig(): ServerConfig {
     azure: {
       endpoint,
       imageModel,
-      imageFallbackModel,
-      tenantId: process.env.AZURE_TENANT_ID,
-      clientId: process.env.AZURE_CLIENT_ID,
-      clientSecret: process.env.AZURE_CLIENT_SECRET
+      imageFallbackModel
     },
     output: {
       directory: outputDir

@@ -8,7 +8,7 @@ Before you begin, ensure you have:
 
 - VS Code installed (version 1.75 or later)
 - Azure Image MCP Server built and ready (`npm run build` completed)
-- Azure OpenAI credentials configured
+- Azure OpenAI RBAC access configured for your signed-in user or managed identity
 - Node.js 18+ installed
 
 ## Supported VS Code Extensions
@@ -42,9 +42,6 @@ Before you begin, ensure you have:
       "env": {
         "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
         "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
-        "AZURE_TENANT_ID": "your-tenant-id",
-        "AZURE_CLIENT_ID": "your-client-id",
-        "AZURE_CLIENT_SECRET": "your-client-secret",
         "IMAGE_OUTPUT_DIR": "/absolute/path/to/output"
       }
     }
@@ -87,9 +84,6 @@ Create `.vscode/settings.json` in your project:
       "env": {
         "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
         "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
-        "AZURE_TENANT_ID": "${env:AZURE_TENANT_ID}",
-        "AZURE_CLIENT_ID": "${env:AZURE_CLIENT_ID}",
-        "AZURE_CLIENT_SECRET": "${env:AZURE_CLIENT_SECRET}",
         "IMAGE_OUTPUT_DIR": "${workspaceFolder}/output/images"
       }
     }
@@ -97,7 +91,7 @@ Create `.vscode/settings.json` in your project:
 }
 ```
 
-**Security Note:** Use `${env:VAR_NAME}` to reference system environment variables instead of hardcoding credentials.
+**Security Note:** Use `az login` for local development so MCP settings do not contain credentials.
 
 **Usage:**
 1. Open Claude Code panel
@@ -141,9 +135,6 @@ Edit `~/.continue/config.json`:
       "env": {
         "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
         "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
-        "AZURE_TENANT_ID": "your-tenant-id",
-        "AZURE_CLIENT_ID": "your-client-id",
-        "AZURE_CLIENT_SECRET": "your-client-secret",
         "IMAGE_OUTPUT_DIR": "/absolute/path/to/output"
       }
     }
@@ -158,52 +149,37 @@ Edit `~/.continue/config.json`:
 
 ---
 
-## Environment Variables Best Practices
+## Authentication Best Practices
 
-### Option 1: System Environment Variables (Recommended)
+### Option 1: Azure CLI Identity (Recommended for Local Development)
 
-Set environment variables at the system level:
+Sign in with Azure CLI before starting VS Code:
 
 **Linux/macOS:**
 ```bash
-export AZURE_TENANT_ID="your-tenant-id"
-export AZURE_CLIENT_ID="your-client-id"
-export AZURE_CLIENT_SECRET="your-client-secret"
+az login
 ```
-
-Add to `~/.bashrc` or `~/.zshrc` for persistence.
 
 **Windows (PowerShell):**
 ```powershell
-[System.Environment]::SetEnvironmentVariable('AZURE_TENANT_ID', 'your-tenant-id', 'User')
-[System.Environment]::SetEnvironmentVariable('AZURE_CLIENT_ID', 'your-client-id', 'User')
-[System.Environment]::SetEnvironmentVariable('AZURE_CLIENT_SECRET', 'your-client-secret', 'User')
+az login
 ```
 
-Then reference in VS Code settings:
+Assign the signed-in user the `Cognitive Services OpenAI User` role on the Azure OpenAI resource.
+
+### Option 2: User-Assigned Managed Identity
+
+For Azure-hosted scenarios using a user-assigned managed identity, set only the managed identity client ID:
+
 ```json
 "env": {
-  "AZURE_TENANT_ID": "${env:AZURE_TENANT_ID}",
-  "AZURE_CLIENT_ID": "${env:AZURE_CLIENT_ID}",
-  "AZURE_CLIENT_SECRET": "${env:AZURE_CLIENT_SECRET}"
+  "AZURE_CLIENT_ID": "${env:AZURE_CLIENT_ID}"
 }
 ```
 
-### Option 2: VS Code Workspace Variables
+### Option 3: System-Assigned Managed Identity
 
-Use workspace-specific environment files:
-
-1. Create `.vscode/settings.json`
-2. Add MCP configuration with `${env:VAR}` syntax
-3. Set environment variables in your terminal before launching VS Code
-4. Or use VS Code's integrated terminal with environment variables
-
-### Option 3: Azure Key Vault (Production)
-
-For production deployments:
-1. Store secrets in Azure Key Vault
-2. Use managed identity for authentication
-3. Reference Key Vault secrets in your environment configuration
+For system-assigned managed identity, do not set Azure identity environment variables. Enable managed identity on the host and assign the `Cognitive Services OpenAI User` role.
 
 ---
 
@@ -248,9 +224,9 @@ For production deployments:
 **Problem:** "Authentication failed" or "401/403" errors
 
 **Solutions:**
-1. Verify Azure credentials are correct
-2. Check environment variables are properly set
-3. Ensure service principal has correct role: "Cognitive Services OpenAI User"
+1. Run `az login` locally, or verify managed identity is enabled on the Azure host
+2. Ensure the signed-in user or managed identity has the correct role: "Cognitive Services OpenAI User"
+3. Check that the role assignment scope is the Azure OpenAI resource
 4. Test credentials: `az account get-access-token --resource https://cognitiveservices.azure.com/`
 
 ### Images Not Generating

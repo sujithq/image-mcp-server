@@ -15,9 +15,6 @@ export interface AzureConfig {
   endpoint: string;
   imageModel: string;
   imageFallbackModel?: string;
-  tenantId?: string;
-  clientId?: string;
-  clientSecret?: string;
 }
 
 /**

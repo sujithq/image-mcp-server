@@ -174,7 +174,7 @@ export class ImageGenerationTool {
     const lowerMessage = errorMessage.toLowerCase();
 
     if (lowerMessage.includes('auth') || lowerMessage.includes('401') || lowerMessage.includes('403')) {
-      suggestion = 'Check Azure credentials and ensure the service principal or managed identity has the Cognitive Services OpenAI User role.';
+      suggestion = 'Check Azure credentials and ensure the signed-in user or managed identity has the Cognitive Services OpenAI User role.';
     } else if (lowerMessage.includes('429') || lowerMessage.includes('rate limit')) {
       suggestion = 'Rate limit exceeded. Please wait and try again. Consider implementing exponential backoff.';
     } else if (lowerMessage.includes('content_filter') || lowerMessage.includes('content policy')) {

@@ -107,20 +107,31 @@ export class AzureImageService {
     model: string
   ): Promise<ImageGenerationResult> {
     const size = request.size || '1024x1024';
-    const quality = request.quality || 'standard';
+    const quality = this.normaliseQuality(request.quality);
     const n = request.n || 1;
+    const outputFormat = this.normaliseOutputFormat(request.output_format);
+    const outputCompression = this.normaliseOutputCompression(request.output_compression);
 
     try {
-      // Call Azure OpenAI image generation endpoint
-      const response = await this.client.images.generate({
+      const imageRequest: Record<string, unknown> = {
         model,
         prompt: request.prompt,
         n,
-        size: size as '1024x1024' | '1024x1792' | '1792x1024',
-        quality: quality as 'standard' | 'hd',
+        size,
+        quality,
         user: request.user,
-        response_format: 'b64_json'
-      });
+        output_format: outputFormat
+      };
+
+      if (request.background) {
+        imageRequest.background = request.background;
+      }
+
+      if (outputCompression !== undefined) {
+        imageRequest.output_compression = outputCompression;
+      }
+
+      const response = await this.client.images.generate(imageRequest as never);
 
       if (!response.data || response.data.length === 0) {
         throw new Error('No images returned from Azure OpenAI');
@@ -146,7 +157,7 @@ export class AzureImageService {
 
         // Generate deterministic filename
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `image-${timestamp}-${i}.png`;
+        const filename = `image-${timestamp}-${i}.${outputFormat}`;
         const filepath = join(this.outputDir, filename);
 
         // Decode base64 and write to file
@@ -169,7 +180,7 @@ export class AzureImageService {
         metadataList.push(metadata);
 
         // Write metadata sidecar file
-        const metadataPath = filepath.replace('.png', '.json');
+        const metadataPath = filepath.replace(`.${outputFormat}`, '.json');
         await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
 
         logger.debug('Image saved', { filepath, metadataPath });
@@ -177,7 +188,7 @@ export class AzureImageService {
 
       return {
         filePaths,
-        mimeType: 'image/png',
+        mimeType: `image/${outputFormat}`,
         dimensions: { width, height },
         parameters: {
           model,
@@ -190,6 +201,41 @@ export class AzureImageService {
     } catch (error) {
       this.handleAzureError(error);
       throw error;
+    }
+  }
+
+  private normaliseQuality(quality?: string): string {
+    if (quality === 'hd') {
+      return 'high';
+    }
+
+    if (quality === 'standard') {
+      return 'medium';
+    }
+
+    return quality || 'high';
+  }
+
+  private normaliseOutputFormat(outputFormat?: string): string {
+    if (outputFormat === 'webp') {
+      return 'png';
+    }
+
+    return outputFormat || 'png';
+  }
+
+  private normaliseOutputCompression(outputCompression?: string): number | undefined {
+    switch (outputCompression) {
+      case 'none':
+        return 0;
+      case 'low':
+        return 25;
+      case 'medium':
+        return 65;
+      case 'high':
+        return 100;
+      default:
+        return undefined;
     }
   }
 

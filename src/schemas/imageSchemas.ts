@@ -16,9 +16,9 @@ export const ImageGenerationSchema = z.object({
     .describe('Image dimensions (default: 1024x1024)'),
 
   quality: z
-    .enum(['standard', 'hd'])
+    .enum(['standard', 'hd', 'low', 'medium', 'high'])
     .optional()
-    .describe('Image quality (default: standard)'),
+    .describe('Image quality (default: high)'),
 
   n: z
     .number()

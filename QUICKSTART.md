@@ -9,7 +9,7 @@ Before you begin, make sure you have:
 - [ ] Node.js 18 or higher installed
 - [ ] An Azure subscription
 - [ ] Azure OpenAI resource with deployed image models
-- [ ] Service principal or managed identity with appropriate permissions
+- [ ] Signed-in Azure CLI user or managed identity with appropriate RBAC permissions
 
 ## Step 1: Azure Setup
 
@@ -39,19 +39,20 @@ az cognitiveservices account create \
 
 ### Set Up Authentication
 
-**For local development (Service Principal):**
+**For local development (Azure CLI identity):**
 
 ```bash
-# Create service principal
-az ad sp create-for-rbac --name azure-image-mcp-sp \
+# Sign in with the account that will run the MCP server
+az login
+
+# Assign RBAC access to that signed-in user
+az role assignment create \
+  --assignee $(az ad signed-in-user show --query id -o tsv) \
   --role "Cognitive Services OpenAI User" \
-  --scopes /subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.CognitiveServices/accounts/{openai-resource-name}
+  --scope /subscriptions/{subscription-id}/resourceGroups/{rg-name}/providers/Microsoft.CognitiveServices/accounts/{openai-resource-name}
 ```
 
-Save the output values:
-- `appId` → `AZURE_CLIENT_ID`
-- `password` → `AZURE_CLIENT_SECRET`
-- `tenant` → `AZURE_TENANT_ID`
+The server uses `DefaultAzureCredential`, so local development can authenticate through Azure CLI without storing a client secret.
 
 **For Azure-hosted runtime (Managed Identity):**
 
@@ -100,10 +101,10 @@ AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
 AZURE_OPENAI_IMAGE_MODEL=gpt-image-2
 AZURE_OPENAI_IMAGE_FALLBACK_MODEL=gpt-image-1.5
 
-# For local development only
-AZURE_TENANT_ID=your-tenant-id
-AZURE_CLIENT_ID=your-client-id
-AZURE_CLIENT_SECRET=your-client-secret
+# Authentication uses DefaultAzureCredential with Azure RBAC.
+# For local development, run `az login` before starting the server.
+# For Azure-hosted user-assigned managed identity, optionally set AZURE_CLIENT_ID.
+# AZURE_CLIENT_ID=your-managed-identity-client-id
 
 IMAGE_OUTPUT_DIR=./output/images
 MCP_TRANSPORT_MODE=stdio
@@ -174,9 +175,6 @@ Choose one of the following VS Code extensions that support MCP:
       "env": {
         "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
         "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
-        "AZURE_TENANT_ID": "your-tenant-id",
-        "AZURE_CLIENT_ID": "your-client-id",
-        "AZURE_CLIENT_SECRET": "your-client-secret",
         "IMAGE_OUTPUT_DIR": "/absolute/path/to/generated-images"
       }
     }
@@ -197,9 +195,6 @@ Create or edit `.vscode/settings.json` in your workspace:
       "env": {
         "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
         "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
-        "AZURE_TENANT_ID": "${env:AZURE_TENANT_ID}",
-        "AZURE_CLIENT_ID": "${env:AZURE_CLIENT_ID}",
-        "AZURE_CLIENT_SECRET": "${env:AZURE_CLIENT_SECRET}",
         "IMAGE_OUTPUT_DIR": "${workspaceFolder}/generated-images"
       }
     }
@@ -207,7 +202,7 @@ Create or edit `.vscode/settings.json` in your workspace:
 }
 ```
 
-**Pro tip:** Use `${env:VARIABLE_NAME}` to reference environment variables instead of hardcoding secrets.
+**Pro tip:** Use `az login` for local development, then keep MCP configuration free of credentials.
 
 #### For Continue Extension:
 
@@ -222,9 +217,6 @@ Edit `~/.continue/config.json`:
       "env": {
         "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
         "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
-        "AZURE_TENANT_ID": "your-tenant-id",
-        "AZURE_CLIENT_ID": "your-client-id",
-        "AZURE_CLIENT_SECRET": "your-client-secret",
         "IMAGE_OUTPUT_DIR": "/absolute/path/to/generated-images"
       }
     }
@@ -260,7 +252,7 @@ The AI will use the `generate_image` tool and return the path to the generated i
 **Error:** `Authentication failed` or `401/403`
 
 **Solution:**
-1. Verify service principal credentials are correct
+1. Run `az login` locally, or verify managed identity is enabled on the Azure host
 2. Check role assignment: `Cognitive Services OpenAI User`
 3. Ensure resource scope is correct
 4. Try getting a token manually:

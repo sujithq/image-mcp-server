@@ -24,14 +24,14 @@ A Model Context Protocol (MCP) server for Azure OpenAI image generation. This se
 
 2. **Identity and Access**
 
-   For **local development/CI** (service principal):
+   For **local development** (Azure CLI identity):
    ```bash
-   # Create service principal
-   az ad sp create-for-rbac --name azure-image-mcp-sp
+   # Sign in with the account that will run the MCP server
+   az login
 
    # Assign role to Azure OpenAI resource
    az role assignment create \
-     --assignee <service-principal-client-id> \
+     --assignee $(az ad signed-in-user show --query id -o tsv) \
      --role "Cognitive Services OpenAI User" \
      --scope <azure-openai-resource-id>
    ```
@@ -77,11 +77,10 @@ AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
 AZURE_OPENAI_IMAGE_MODEL=gpt-image-2
 AZURE_OPENAI_IMAGE_FALLBACK_MODEL=gpt-image-1.5
 
-# Azure Authentication (for local development with service principal)
-# In production with managed identity, these can be omitted
-AZURE_TENANT_ID=your-tenant-id
-AZURE_CLIENT_ID=your-client-id
-AZURE_CLIENT_SECRET=your-client-secret
+# Azure Authentication
+# Uses DefaultAzureCredential with Azure RBAC. For local development, run `az login`.
+# For Azure-hosted user-assigned managed identity, optionally set AZURE_CLIENT_ID.
+# AZURE_CLIENT_ID=your-managed-identity-client-id
 
 # Image Output Configuration
 IMAGE_OUTPUT_DIR=./output/images
@@ -100,9 +99,7 @@ LOG_LEVEL=info
 | `AZURE_OPENAI_ENDPOINT` | Yes | - | Azure OpenAI endpoint URL |
 | `AZURE_OPENAI_IMAGE_MODEL` | No | `gpt-image-2` | Primary image model deployment name |
 | `AZURE_OPENAI_IMAGE_FALLBACK_MODEL` | No | - | Fallback model deployment name |
-| `AZURE_TENANT_ID` | Local only | - | Azure AD tenant ID (service principal) |
-| `AZURE_CLIENT_ID` | Local only | - | Service principal client ID |
-| `AZURE_CLIENT_SECRET` | Local only | - | Service principal client secret |
+| `AZURE_CLIENT_ID` | No | - | Optional user-assigned managed identity client ID |
 | `IMAGE_OUTPUT_DIR` | No | `./output/images` | Directory to save generated images |
 | `MCP_TRANSPORT_MODE` | No | `stdio` | Transport mode: stdio, sse, or both |
 | `SSE_PORT` | No | `3000` | Port for SSE server (if using sse mode) |
@@ -143,9 +140,6 @@ The server integrates with VS Code through MCP-compatible extensions. There are 
       "env": {
         "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
         "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
-        "AZURE_TENANT_ID": "your-tenant-id",
-        "AZURE_CLIENT_ID": "your-client-id",
-        "AZURE_CLIENT_SECRET": "your-client-secret",
         "IMAGE_OUTPUT_DIR": "/path/to/output/images"
       }
     }
@@ -167,9 +161,6 @@ The server integrates with VS Code through MCP-compatible extensions. There are 
       "env": {
         "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
         "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
-        "AZURE_TENANT_ID": "${env:AZURE_TENANT_ID}",
-        "AZURE_CLIENT_ID": "${env:AZURE_CLIENT_ID}",
-        "AZURE_CLIENT_SECRET": "${env:AZURE_CLIENT_SECRET}",
         "IMAGE_OUTPUT_DIR": "${workspaceFolder}/output/images"
       }
     }
@@ -191,9 +182,6 @@ The server integrates with VS Code through MCP-compatible extensions. There are 
       "env": {
         "AZURE_OPENAI_ENDPOINT": "https://your-resource.openai.azure.com/",
         "AZURE_OPENAI_IMAGE_MODEL": "gpt-image-2",
-        "AZURE_TENANT_ID": "your-tenant-id",
-        "AZURE_CLIENT_ID": "your-client-id",
-        "AZURE_CLIENT_SECRET": "your-client-secret",
         "IMAGE_OUTPUT_DIR": "/path/to/output/images"
       }
     }
@@ -339,10 +327,10 @@ src/
 **Problem**: `Authentication failed` or `401/403` errors
 
 **Solutions**:
-1. Verify Azure credentials are set correctly
-2. Ensure service principal/managed identity has `Cognitive Services OpenAI User` role
+1. Run `az login` locally, or verify the Azure host has managed identity enabled
+2. Ensure your signed-in user or managed identity has the `Cognitive Services OpenAI User` role
 3. Check that the role is assigned to the correct Azure OpenAI resource
-4. For local development, verify all three values are set: `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`
+4. For user-assigned managed identity, verify `AZURE_CLIENT_ID` is set to the managed identity client ID
 
 ### Model Not Found
 
@@ -365,9 +353,9 @@ src/
 ## Security Best Practices
 
 1. **Never commit secrets**: Keep `.env` file out of version control
-2. **Use managed identity in production**: Avoid storing client secrets in production environments
-3. **Rotate credentials regularly**: Rotate service principal secrets used in dev/CI
-4. **Store secrets securely**: Use Azure Key Vault or similar for secret management
+2. **Use managed identity in production**: Avoid storing credentials in production environments
+3. **Prefer RBAC**: Grant the minimum Azure role needed at the Azure OpenAI resource scope
+4. **Use short-lived developer credentials**: Authenticate locally with `az login`
 5. **Monitor auth failures**: Set up alerting for repeated authentication failures
 
 ## License
