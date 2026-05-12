@@ -54,7 +54,7 @@ function resolveLogLevel(level?: string): 'debug' | 'info' | 'warn' | 'error' {
     return level;
   }
 
-  console.error(`Invalid LOG_LEVEL "${level}". Falling back to "info". Allowed values: debug, info, warn, error.`);
+  console.error(`Invalid LOG_LEVEL "${level}". Falling back to "info". Allowed values: debug, info, warn, error`);
   return 'info';
 }
 

@@ -36,13 +36,17 @@ describe('loadConfig', () => {
 
   it('loads valid values', async () => {
     process.env.AZURE_OPENAI_ENDPOINT = 'https://example.openai.azure.com';
-    process.env.MCP_TRANSPORT_MODE = 'sse';
     process.env.LOG_LEVEL = 'warn';
 
     const { loadConfig } = await import('../../src/utils/config');
-    const config = loadConfig();
 
-    expect(config.transport.mode).toBe('sse');
-    expect(config.logging.level).toBe('warn');
+    (['stdio', 'sse', 'both'] as const).forEach(mode => {
+      process.env.MCP_TRANSPORT_MODE = mode;
+      const config = loadConfig();
+      expect(config.transport.mode).toBe(mode);
+    });
+
+    const configWithWarnLogLevel = loadConfig();
+    expect(configWithWarnLogLevel.logging.level).toBe('warn');
   });
 });

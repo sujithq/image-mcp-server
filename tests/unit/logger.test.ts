@@ -22,7 +22,7 @@ describe('logger LOG_LEVEL validation', () => {
     const messages = errorSpy.mock.calls.map(([message]) => String(message));
     expect(
       messages.some(message =>
-        message.includes('Invalid LOG_LEVEL "verbose". Falling back to "info". Allowed values: debug, info, warn, error.')
+        message.includes('Invalid LOG_LEVEL "verbose". Falling back to "info". Allowed values: debug, info, warn, error')
       )
     ).toBe(true);
 
