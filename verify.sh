@@ -22,11 +22,17 @@ failures=0
 
 # Check Node.js version
 echo -n "Checking Node.js version... "
-node_version=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-if [ "$node_version" -ge 18 ]; then
-  echo -e "${check_mark} Node.js $(node -v)"
+if command -v node > /dev/null 2>&1; then
+  node_full_version=$(node -v)
+  node_version=$(echo "$node_full_version" | cut -d'v' -f2 | cut -d'.' -f1)
+  if [ "$node_version" -ge 18 ]; then
+    echo -e "${check_mark} Node.js ${node_full_version}"
+  else
+    echo -e "${cross_mark} Node.js ${node_full_version} (requires >= 18)"
+    failures=$((failures + 1))
+  fi
 else
-  echo -e "${cross_mark} Node.js $(node -v) (requires >= 18)"
+  echo -e "${cross_mark} Node.js not found (requires >= 18)"
   failures=$((failures + 1))
 fi
 
